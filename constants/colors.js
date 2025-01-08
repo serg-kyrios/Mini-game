@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+
 const colors = {
     primary500: '#72063c',
     primary600: '#640233',
