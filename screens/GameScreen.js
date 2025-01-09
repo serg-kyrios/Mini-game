@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, FlatList } from 'react-native';
+import {
+    View,
+    StyleSheet,
+    Alert,
+    FlatList,
+    Dimensions,
+    useWindowDimensions,
+} from 'react-native';
+
 import Colors from '../constants/colors';
-import { useFonts } from 'expo-font';
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 import NumberContainer from '../components/game/NumberContainer';
@@ -9,12 +16,10 @@ import PrimaryButton from '../components/ui/PrimaryButton';
 import Title from '../components/ui/Title';
 import Card from '../components/ui/Cards';
 import InstructionText from '../components/ui/InstructionText';
-import StartGameScreen from './StartGameScreen';
 import GuessLogItem from '../components/game/GuessLogItem';
 
 function generateRandomBetween(min, max, exclude) {
     const rndNum = Math.floor(Math.random() * (max - min)) + min;
-
     if (rndNum === exclude) {
         return generateRandomBetween(min, max, exclude);
     } else {
@@ -29,6 +34,7 @@ function GameScreen({ userNumber, onGameOver }) {
     const initialGuess = generateRandomBetween(1, 100, userNumber);
     const [currentGuess, setCurrentGuess] = useState(initialGuess);
     const [guessRounds, setGuessRounds] = useState([initialGuess]);
+    const { width, height } = useWindowDimensions();
 
     useEffect(() => {
         if (currentGuess === userNumber) {
@@ -42,7 +48,6 @@ function GameScreen({ userNumber, onGameOver }) {
     }, []);
 
     function nextGuessHandler(direction) {
-        // direction => 'lower', 'greater'
         if (
             (direction === 'lower' && currentGuess < userNumber) ||
             (direction === 'greater' && currentGuess > userNumber)
@@ -70,9 +75,8 @@ function GameScreen({ userNumber, onGameOver }) {
 
     const guessRoundsListLength = guessRounds.length;
 
-    return (
-        <View style={styles.screen}>
-            <Title>Opponent's Guess</Title>
+    let content = (
+        <>
             <NumberContainer>{currentGuess}</NumberContainer>
             <Card>
                 <InstructionText style={styles.instructionText}>
@@ -95,8 +99,41 @@ function GameScreen({ userNumber, onGameOver }) {
                     </View>
                 </View>
             </Card>
+        </>
+    );
+
+    if (width > 500) {
+        content = (
+            <>
+                <InstructionText style={styles.instructionText}>
+                    Higher or lower?
+                </InstructionText>
+                <View style={styles.buttonsContainerWide}>
+                    <View style={styles.buttonContainer}>
+                        <PrimaryButton
+                            onPress={nextGuessHandler.bind(this, 'lower')}
+                        >
+                            <AntDesign name='down' size={24} color='white' />
+                        </PrimaryButton>
+                    </View>
+                    <NumberContainer>{currentGuess}</NumberContainer>
+                    <View style={styles.buttonContainer}>
+                        <PrimaryButton
+                            onPress={nextGuessHandler.bind(this, 'greater')}
+                        >
+                            <AntDesign name='up' size={24} color='white' />
+                        </PrimaryButton>
+                    </View>
+                </View>
+            </>
+        );
+    }
+
+    return (
+        <View style={styles.screen}>
+            <Title>Opponent's Guess</Title>
+            {content}
             <View style={styles.listContainer}>
-                {/* {guessRounds.map(guessRound => <Text key={guessRound}>{guessRound}</Text>)} */}
                 <FlatList
                     data={guessRounds}
                     renderItem={(itemData) => (
@@ -105,7 +142,7 @@ function GameScreen({ userNumber, onGameOver }) {
                             guess={itemData.item}
                         />
                     )}
-                    keyExtractor={(item) => item}
+                    keyExtractor={(item) => item.toString()}
                 />
             </View>
         </View>
@@ -113,6 +150,8 @@ function GameScreen({ userNumber, onGameOver }) {
 }
 
 export default GameScreen;
+
+const deviseWidth = Dimensions.get('window').width;
 
 const styles = StyleSheet.create({
     screen: {
@@ -131,6 +170,10 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flex: 1,
+    },
+    buttonsContainerWide: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     listContainer: {
         flex: 1,
